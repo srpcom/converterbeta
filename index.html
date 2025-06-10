@@ -153,7 +153,7 @@
 
     <script>
         // --- PENGATURAN APLIKASI ---
-        const APP_VERSION = "6.1"; // Versi diupdate untuk perbaikan bug
+        const APP_VERSION = "6.1";
         const APP_NAME = "SRPCOM CONVERTER";
         // -------------------------
 
@@ -564,7 +564,7 @@
             let proxyGroups = `proxy-groups:\n- name: SRPCOMVPN\n  type: select\n  proxies:\n${proxyList}\n\n`;
             proxyGroups += `- name: FALLBACK\n  type: fallback\n  url: http://www.gstatic.com/generate_204\n  interval: 300\n  proxies:\n${proxyList}\n`;
             
-            fullConfig += `\nrules:\n- MATCH,GLOBAL\n`;
+            fullConfig += proxyGroups + `\nrules:\n- MATCH,GLOBAL\n`;
 
             exportToFile(fullConfig, filename, 'application/x-yaml;charset=utf-8');
         }
