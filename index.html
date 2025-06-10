@@ -4,6 +4,12 @@
     <meta charset="UTF-8">
     <meta name="viewport" content="width=device-width, initial-scale=1.0">
     <title>SRPCOM CONVERTER</title>
+    <!-- Open Graph Meta Tags for Social Media Previews -->
+    <meta property="og:title" id="ogTitle" content="SRPCOM CONVERTER">
+    <meta property="og:description" content="Konversi berbagai format proxy ke YAML dengan mudah. Mendukung VLESS, VMess, Trojan, dan HTTP Upgrade.">
+    <meta property="og:image" content="https://github.com/srpcom/netlify/blob/main/logo%20kecil%20srpcom.png?raw=true">
+    <meta property="og:url" content=""> <!-- You can set the final URL here later -->
+
     <!-- Favicon -->
     <link rel="icon" href="https://github.com/srpcom/netlify/blob/main/logo%20kecil%20srpcom.png?raw=true" type="image/png">
     <script src="https://cdn.tailwindcss.com"></script>
@@ -638,6 +644,9 @@
             const fullTitle = `${APP_NAME} v.${APP_VERSION}`;
             document.title = fullTitle;
             document.getElementById('appTitle').textContent = fullTitle;
+            const ogTitle = document.getElementById('ogTitle');
+            if(ogTitle) ogTitle.setAttribute('content', fullTitle);
+
 
             displayRandomHadith();
             setInitialState();
