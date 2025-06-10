@@ -3,9 +3,9 @@
 <head>
     <meta charset="UTF-8">
     <meta name="viewport" content="width=device-width, initial-scale=1.0">
-    <title>SRPCOM CONVERTER v.6.1</title>
+    <title>SRPCOM CONVERTER v.6.2</title>
     <!-- Open Graph Meta Tags for Social Media Previews -->
-    <meta property="og:title" id="ogTitle" content="SRPCOM CONVERTER v.6.1">
+    <meta property="og:title" id="ogTitle" content="SRPCOM CONVERTER v.6.2">
     <meta property="og:description" content="Konversi berbagai format proxy ke YAML dengan mudah. Mendukung VLESS, VMess, Trojan, dan HTTP Upgrade.">
     <meta property="og:image" content="https://github.com/srpcom/netlify/blob/main/logo%20kecil%20srpcom.png?raw=true">
     <meta property="og:url" content=""> <!-- You can set the final URL here later -->
@@ -153,7 +153,7 @@
 
     <script>
         // --- PENGATURAN APLIKASI ---
-        const APP_VERSION = "6.1";
+        const APP_VERSION = "6.2"; 
         const APP_NAME = "SRPCOM CONVERTER";
         // -------------------------
 
@@ -377,7 +377,7 @@
             throw new Error('Format URI tidak dikenal.');
         }
 
-        function getValidUris(rawInput) {
+       function getValidUris(rawInput) {
             let urisToProcess = [];
             const blocks = rawInput.split(/━━━━━━━━━━━━━━━━━━━━━/);
 
@@ -411,18 +411,46 @@
                 const rawUris = rawInput.split(/[|\n\s]+/).map(u => u.trim()).filter(u => u.startsWith("vmess://") || u.startsWith("vless://") || u.startsWith("trojan://"));
                 rawUris.forEach(uri => urisToProcess.push({ uri, expiry: null }));
             }
+            
+            const groupedUris = {};
 
-            // Remove duplicates
-            const uniqueUris = [];
-            const seenUris = new Set();
             for (const item of urisToProcess) {
-                if (!seenUris.has(item.uri)) {
-                    uniqueUris.push(item);
-                    seenUris.add(item.uri);
+                let name = '';
+                let isTls = false;
+
+                try {
+                    if (item.uri.startsWith('vmess://')) {
+                        const config = JSON.parse(decodeBase64(item.uri.substring(8).trim()));
+                        name = config.ps || 'unnamed-vmess';
+                        isTls = config.tls === 'tls' || config.port === '443';
+                    } else {
+                        const url = new URL(item.uri);
+                        name = decodeURIComponent(url.hash.substring(1)) || 'unnamed-protocol';
+                        isTls = url.searchParams.get('security') === 'tls' || url.port === '443';
+                    }
+                } catch (e) {
+                    console.error("Error parsing URI for grouping:", item.uri, e);
+                    continue;
                 }
+                
+                if (!groupedUris[name]) {
+                    groupedUris[name] = [];
+                }
+                groupedUris[name].push({ ...item, isTls });
             }
 
-            return uniqueUris;
+            const finalUris = [];
+            for (const name in groupedUris) {
+                const group = groupedUris[name];
+                const tlsVersion = group.find(item => item.isTls);
+                if (tlsVersion) {
+                    finalUris.push(tlsVersion); // Prioritize TLS version
+                } else {
+                    finalUris.push(group[0]); // If no TLS, just take the first one found
+                }
+            }
+            
+            return finalUris;
         }
         
         function autoGenerate() {
@@ -564,7 +592,7 @@
             let proxyGroups = `proxy-groups:\n- name: SRPCOMVPN\n  type: select\n  proxies:\n${proxyList}\n\n`;
             proxyGroups += `- name: FALLBACK\n  type: fallback\n  url: http://www.gstatic.com/generate_204\n  interval: 300\n  proxies:\n${proxyList}\n`;
             
-            fullConfig += proxyGroups + `\nrules:\n- MATCH,GLOBAL\n`;
+            fullConfig += `\nrules:\n- MATCH,GLOBAL\n`;
 
             exportToFile(fullConfig, filename, 'application/x-yaml;charset=utf-8');
         }
